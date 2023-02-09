@@ -1,0 +1,87 @@
+import json
+
+class FileStorage:
+    def __init__(self, file_path, class_name):
+        self.file_path = file_path
+        self.class_name = class_name
+        self.objects = self.all()
+
+    def all(self):
+        """
+        Return a dictionary with all objects of a certain class
+        """
+        try:
+            with open(self.file_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {}
+
+    def new(self, obj):
+        """
+        Set in self.objects the obj with key <obj class name>.id
+        """
+        key = "{}.{}".format(type(obj).__name__, obj.id)
+        self.objects[key] = obj
+
+    def save(self):
+        """
+        Serializes self.objects to the JSON file (path: self.file_path)
+        """
+        with open(self.file_path, 'w', encoding='utf-8') as f:
+            json.dump(self.objects, f)
+
+    def reload(self):
+        """
+        Deserializes the JSON file to self.objects
+        (only useful in case the JSON file was
+        manually changed and you want to reload it)
+        """
+        self.objects = self.all()
+
+class BaseModel:
+    def __init__(self, *args, **kwargs):
+        if kwargs:
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+        else:
+            self.id = str(uuid.uuid4())
+            self.created_at = datetime.now()
+            self.updated_at = datetime.now()
+            storage.new(self)
+
+    def __str__(self):
+        return "[{}] ({}) {}".format(
+            type(self).__name__, self.id, self.__dict__)
+
+    def save(self):
+        self.updated_at = datetime.now()
+        storage.save()
+
+    def to_dict(self):
+        """
+        Return a dictionary containing all keys/values of
+        __dict__ of the instance
+        """
+        dictionary = self.__dict__.copy()
+        dictionary["__class__"] = type(self).__name__
+        dictionary["created_at"] = self.created_at.isoformat()
+        dictionary["updated_at"] = self.updated_at.isoformat()
+        return dictionary
+
+class Place(BaseModel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class State(BaseModel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class City(BaseModel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class Amenity(BaseModel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
